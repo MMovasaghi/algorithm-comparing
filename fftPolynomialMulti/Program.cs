@@ -8,14 +8,34 @@ namespace fftPolynomialMulti
     {
         static void Main(string[] args)
         {
-            List<Complex> a = new List<Complex>();
-            for (int i = 0; i < 4; i++)
+            Random rand = new Random();
+            List<Complex> a1 = new List<Complex>();
+            List<Complex> a2 = new List<Complex>();
+            int tmp;
+            Console.Write("A1 : ");
+            for (int i = 1; i <= 4; i++)
             {
-                a.Add(new Complex(i+1, 0));
+                tmp = rand.Next(1, 10);
+                Console.Write(tmp + " ");
+                a1.Add(new Complex(tmp, 0));
             }
-            List<Complex> b = Multiplication.FFT(a);
+            Console.Write("\nA2 : ");
+            for (int i = 1; i <= 4; i++)
+            {
+                tmp = rand.Next(1, 10);
+                Console.Write(tmp + " ");
+                a2.Add(new Complex(tmp, 0));
+            }
+            List<Complex> b = Multiplication.FFT(a1);
+            List<Complex> c = Multiplication.FFT(a2);
+            List<Complex> result = new List<Complex>();
+            for (int i = 0; i < c.Count; i++)
+            {
+                result.Add(Complex.Multiply(b[i], c[i]));
+            }
+            Console.WriteLine();
             for (int i = 0; i < 4; i++)
-                Console.WriteLine(b[i]);
+                Console.WriteLine(result[i]);
         }
     }
 }

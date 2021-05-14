@@ -29,7 +29,7 @@ namespace fftPolynomialMulti
         }
         // Iterative FFT function to compute the DFT
         // of given coefficient vector
-        static void fft(Complex[] a, Complex[] A, int log2n)
+        static void EficentFFT(Complex[] a, Complex[] A, int log2n)
         {
             int n = 4;
 
@@ -70,49 +70,81 @@ namespace fftPolynomialMulti
                 }
             }
         }
-        public static List<Complex> FFT(List<Complex> array)
+        
+
+        //Normal FFT
+        public static Complex[] FFT(Complex[] array)
         {
             int n = array.Count();
 
             // if input contains just one element
             if (n == 1)
-                return new List<Complex> { new Complex(1, 0) };
+                return array;
 
-            // For storing n complex nth roots of unity
-            List<Complex> w = new List<Complex>();
-            for (int i = 0; i < n; i++)
-            {
-                double alpha = -2 * Math.PI * i / n;
-                w.Add(new Complex(Math.Cos(alpha), Math.Sin(alpha)));
-            }
+            double fi = (2 * Math.PI) / n;
+            var wn = new Complex(Math.Cos(fi), Math.Sin(fi));
+            var w = new Complex(1, 0);
 
-            List<Complex> A0 = new List<Complex>(n / 2);
-            List<Complex> A1 = new List<Complex>(n / 2);
+            Complex[] A0 = new Complex[n / 2];
+            Complex[] A1 = new Complex[n / 2];
             for (int i = 0; i < n / 2; i++)
             {
-
                 // even indexed coefficients
-                A0.Add(array[i * 2]);
-
+                A0[i] = array[i * 2];
                 // odd indexed coefficients
-                A1.Add(array[i * 2 + 1]);
+                A1[i] = array[i * 2 + 1];
             }
 
             // Recursive call for even indexed coefficients
-            List<Complex> y0 = FFT(A0);
+            Complex[] y0 = FFT(A0);
 
             // Recursive call for odd indexed coefficients
-            List<Complex> y1 = FFT(A1);
+            Complex[] y1 = FFT(A1);
 
             // for storing values of y0, y1, y2, ..., yn-1.
             Complex[] y = new Complex[n];
 
             for (int k = 0; k < n / 2; k++)
             {
-                y[k] = y0[k] + w[k] * y1[k];
-                y[k + n / 2] = y0[k] - w[k] * y1[k];
+                y[k] = y0[k] + (w * y1[k]);
+                y[k + (n / 2)] = y0[k] - (w * y1[k]);
+                w = Complex.Multiply(w, wn);
             }
-            return y.ToList();
+            return y;
+        }
+
+        public static Complex[] PointMultiplication(Complex[] A, Complex[] B)
+        {
+            /* adding zero to ensure that when we carry out the FFT 
+             * on the vectors, multiply the FFTs element wise and 
+             * carry out an Inverse FFT (IFFT), the result will 
+             * correspond to a linear convolution.
+             */
+            for (int i = A.Length; i < B.Length + A.Length; i++)
+            {
+                A[i] = 0;
+            }
+            for (int i = B.Length; i < B.Length + A.Length; i++)
+            {
+                B[i] = 0;
+            }
+            // calculate the FFT of A & B
+            Complex[] Ap = Multiplication.FFT(A);
+            Complex[] Bp = Multiplication.FFT(B);
+            // the Result point multiplication in fourie form
+            Complex[] Rp = new Complex[Ap.Length];
+            for (int i = 0; i < Ap.Length; i++)
+            {
+                Rp[i] = Complex.Multiply(Ap[i], Bp[i]);
+            }
+            // the result
+            Complex[] R = new Complex[A.Length];
+
+            // Calculate IFFT
+            // ....
+            // ....
+
+            return R;
         }
     }
 }

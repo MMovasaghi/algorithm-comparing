@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Numerics;
 
 namespace fftPolynomialMulti
@@ -8,34 +9,64 @@ namespace fftPolynomialMulti
     {
         static void Main(string[] args)
         {
+            const int LENGTH = 999000;
             Random rand = new Random();
-            List<Complex> a1 = new List<Complex>();
-            List<Complex> a2 = new List<Complex>();
-            int tmp;
-            Console.Write("A1 : ");
-            for (int i = 1; i <= 4; i++)
+            double[] a1 = new double[LENGTH];
+            double[] a2 = new double[LENGTH];
+            for (int i = 0; i < LENGTH; i++)
             {
-                tmp = rand.Next(1, 10);
-                Console.Write(tmp + " ");
-                a1.Add(new Complex(tmp, 0));
+                a1[i] = rand.Next(1, 100);
+                a2[i] = rand.Next(1, 100);
             }
-            Console.Write("\nA2 : ");
-            for (int i = 1; i <= 4; i++)
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
+
+            //FFT -------------------------------------------------
+
+            Complex[] r1 = Multiplication.SequentialFFT(a1);
+            Complex[] r2 = Multiplication.SequentialFFT(a2);
+            Complex[] r3 = new Complex[LENGTH];
+            for (int i = 0; i < r2.Length; i++)
             {
-                tmp = rand.Next(1, 10);
-                Console.Write(tmp + " ");
-                a2.Add(new Complex(tmp, 0));
+                r3[i] = Complex.Multiply(r1[i], r2[i]);
             }
-            List<Complex> b = Multiplication.FFT(a1);
-            List<Complex> c = Multiplication.FFT(a2);
-            List<Complex> result = new List<Complex>();
-            for (int i = 0; i < c.Count; i++)
+            Complex[] R = Multiplication.SequentialIFFT(r3);
+
+            //------------------------------------------------------
+
+            stopWatch.Stop();
+            TimeSpan ts = stopWatch.Elapsed;
+
+            // Format and display the TimeSpan value.
+            string elapsedTime = String.Format("{0:00}", ts.Milliseconds / 10);
+            Console.WriteLine("RunTime Of Sequential DFT (ms): " + elapsedTime);
+
+
+            stopWatch = new Stopwatch();
+            stopWatch.Start();
+
+            //FFT -------------------------------------------------
+
+            Complex[] r11 = new Complex[LENGTH]; 
+            Multiplication.ParallelFFT(a1, (int)Math.Log(Environment.ProcessorCount, 2) + 4, r11);
+            Complex[] r22 = new Complex[LENGTH]; 
+            Multiplication.ParallelFFT(a2, (int)Math.Log(Environment.ProcessorCount, 2) + 4, r22);
+            Complex[] r33 = new Complex[LENGTH];
+            for (int i = 0; i < r2.Length; i++)
             {
-                result.Add(Complex.Multiply(b[i], c[i]));
+                r33[i] = Complex.Multiply(r11[i], r22[i]);
             }
-            Console.WriteLine();
-            for (int i = 0; i < 4; i++)
-                Console.WriteLine(result[i]);
+            Complex[] RR = new Complex[LENGTH]; 
+            Multiplication.ParallelIFFT(r33, (int)Math.Log(Environment.ProcessorCount, 2) + 4, RR);
+
+            //------------------------------------------------------
+
+            stopWatch.Stop();
+            ts = stopWatch.Elapsed;
+
+            // Format and display the TimeSpan value.
+            elapsedTime = String.Format("{0:00}", ts.Milliseconds / 10);
+            Console.WriteLine("RunTime Of Parallel DFT (ms): " + elapsedTime);
         }
     }
 }
